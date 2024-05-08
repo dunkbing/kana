@@ -1,4 +1,4 @@
-module github.com/dunkbing/kana-practice
+module github.com/dunkbing/kana
 
 go 1.22.2
 
