@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-const usage = `Usage: kana [--help] [--katakana] [--hiragana]
+const usage = `Usage: kana [--help] [--kata] [--hira]
 
 Options:
   --help  Show this help message and exit
@@ -31,6 +31,12 @@ const (
 	katakanaChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
 )
 
+const (
+	hiragana = "hiragana"
+	katakana = "katakana"
+	both     = "both"
+)
+
 var term = termenv.ColorProfile()
 
 func main() {
@@ -43,9 +49,9 @@ func main() {
 			fmt.Println(usage)
 			return
 		case "--kata":
-			kanaType = "katakana"
+			kanaType = katakana
 		case "--hira":
-			kanaType = "hiragana"
+			kanaType = hiragana
 		default:
 			fmt.Println("Unknown option: " + arg)
 			fmt.Println()
@@ -55,7 +61,7 @@ func main() {
 	}
 
 	if kanaType == "" {
-		kanaType = "both"
+		kanaType = both
 	}
 
 	p := tea.NewProgram(initialModel(kanaType))
@@ -139,9 +145,9 @@ func newWord(kanaType string) string {
 	var kanaChars []rune
 
 	switch kanaType {
-	case "katakana":
+	case katakana:
 		kanaChars = []rune(katakanaChars)
-	case "hiragana":
+	case hiragana:
 		kanaChars = []rune(hiraganaChars)
 	default:
 		bothChars := hiraganaChars + katakanaChars

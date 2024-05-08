@@ -37,7 +37,7 @@ chmod +x /usr/local/bin/kana
 ### How to use
 
 ```bash
-Usage: kana [--help] [--katakana] [--hiragana]
+Usage: kana [--help] [--kata] [--hira]
 
 Options:
   --help  Show this help message and exit
