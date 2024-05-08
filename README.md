@@ -1,12 +1,37 @@
 # kana practice
 Terminal app to practice typing Kana (Japanese characters) in Romaji. Built with [bubbletea](https://github.com/charmbracelet/bubbletea)
 
+### Demo
+![demo](./demo/demo.gif)
+
 ### Install
 
 #### Golang
 
 ```bash
 go install github.com/dunkbing/kana@latest
+```
+
+#### Homebrew
+
+```bash
+brew install dunkbing/brews/kana
+```
+
+### Standalone Binary
+
+Download latest archive `*.tar.gz` for your target platform from [the releases page](https://github.com/dunkbing/kana/releases/latest).
+
+### Source
+
+```bash
+git clone https://github.com/dunkbing/kana.git
+cd kana
+go build -o kana .
+cp kana /usr/local/bin
+chmod +x /usr/local/bin/kana
+
+# kana
 ```
 
 ### How to use
@@ -27,6 +52,3 @@ Example:
 Word displayed: あい
 You type: ai (then press Enter)
  ```
-
-### Demo
-![demo](./demo/demo.gif)
