@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-const usage = `Usage: kana-practice [--help] [--katakana] [--hiragana]
+const usage = `Usage: kana [--help] [--katakana] [--hiragana]
 
 Options:
   --help  Show this help message and exit
@@ -124,12 +124,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	statusMsg := m.status
-	if statusMsg == "" {
-		statusMsg = "Score: " + fmt.Sprintf("%d", m.points)
-	}
+	statusMsg := fmt.Sprintf("%v (Points: %v)", m.status, m.points)
 
-	return fmt.Sprintf("\n\n%s\n\n%s\n\n%s\n\n%s\n\n",
+	return fmt.Sprintf(
+		"\n%s\n\n%s\n\n%s\n\n%s\n\n",
 		termenv.String("Kana Word: ").Foreground(term.Color("205")).String()+m.currentWord,
 		m.textInput.View(),
 		statusMsg,
