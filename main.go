@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"math/rand"
-	"time"
-
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/termenv"
+	"log"
+	"math/rand"
 )
 
 const usage = `kana-practice
@@ -38,9 +36,10 @@ type model struct {
 }
 
 func initialModel() model {
-	i := textinput.NewModel()
+	i := textinput.New()
 	i.Placeholder = "Type the Romaji representation and press Enter 👆"
 	i.Focus()
+	i.Reset()
 
 	return model{
 		textInput:   i,
@@ -132,8 +131,4 @@ func toRomaji(s string) string {
 		romaji += kanaMap[r]
 	}
 	return romaji
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
