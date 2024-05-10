@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kana Practice</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-gray-100">
+<div class="container mx-auto py-8">
+    <h1 class="text-4xl font-bold mb-4">Kana Practice</h1>
+    <div id="app" class="bg-white p-4 rounded-lg shadow-md">
+        <div class="mb-4">
+            <span class="text-2xl font-bold">Kana Word:</span>
+            <span id="kana-word" class="text-4xl ml-2"></span>
+        </div>
+        <input id="input-field" type="text" class="border border-gray-400 rounded-md py-2 px-3 w-full mb-4" placeholder="Type the Romaji representation and press Enter">
+        <div>
+            <span class="text-lg font-bold">Status:</span>
+            <span id="status" class="ml-2"></span>
+        </div>
+        <div>
+            <span class="text-lg font-bold">Score:</span>
+            <span id="score" class="ml-2">0</span>
+        </div>
+    </div>
+</div>
+<script>
+    const kanaType = '{{.KanaType}}';
+</script>
+<script src="/static/main.js"></script>
+</body>
+</html>

@@ -1,15 +1,25 @@
 package main
 
 import (
+	"embed"
+	_ "embed"
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
+	"html/template"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 )
+
+//go:embed templates/*
+var templates embed.FS
+
+//go:embed static/*
+var staticFiles embed.FS
 
 const usage = `Usage: kana [--help] [--kata] [--hira]
 
@@ -44,6 +54,7 @@ var term = termenv.ColorProfile()
 func main() {
 	var kanaType string
 	args := os.Args[1:]
+	runServer := false
 
 	for _, arg := range args {
 		switch arg {
@@ -54,6 +65,8 @@ func main() {
 			kanaType = katakana
 		case "--hira":
 			kanaType = hiragana
+		case "serve":
+			runServer = true
 		default:
 			fmt.Println("Unknown option: " + arg)
 			fmt.Println()
@@ -66,10 +79,39 @@ func main() {
 		kanaType = both
 	}
 
-	p := tea.NewProgram(initialModel(kanaType))
+	if runServer {
+		startServer()
+	} else {
+		p := tea.NewProgram(initialModel(kanaType))
+		if _, err := p.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
 
-	if _, err := p.Run(); err != nil {
-		log.Fatal(err)
+func startServer() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		indexHandler(w, r)
+	})
+	http.Handle("/static/", http.FileServer(http.FS(staticFiles)))
+
+	log.Println("Server started on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFS(templates, "templates/index.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{
+		"KanaType": r.URL.Query().Get("kanaType"),
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
