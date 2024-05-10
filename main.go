@@ -24,7 +24,9 @@ This app displays a random Katakana or Hiragana word, and you need to type the c
 
 Example:
 Word displayed: あい
-You type: ai (then press Enter)`
+You type: ai (then press Enter)
+
+You can switch the kana mode with ctrl-h for Hiragana, ctrl-k for Katakana, or ctrl-b for both.`
 
 const (
 	hiraganaChars = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃゅょっ"
@@ -107,6 +109,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc", "ctrl+c":
 			return m, tea.Quit
 
+		case "ctrl+h":
+			if m.kanaType == hiragana {
+				return m, cmd
+			}
+			m.kanaType = hiragana
+			m.currentWord = newWord(hiragana)
+
+		case "ctrl+k":
+			if m.kanaType == katakana {
+				return m, cmd
+			}
+			m.kanaType = katakana
+			m.currentWord = newWord(katakana)
+
+		case "ctrl+b":
+			if m.kanaType == both {
+				return m, cmd
+			}
+			m.kanaType = both
+			m.currentWord = newWord(both)
+
 		case "enter":
 			if m.textInput.Value() == toRomaji(m.currentWord) {
 				m.status = "🎉 Correct!"
@@ -132,11 +155,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	statusMsg := fmt.Sprintf("%v (Points: %v)", m.status, m.points)
 
+	hiraganaMode := termenv.String(hiragana).Foreground(term.Color("10")).String()
+	if m.kanaType != hiragana {
+		hiraganaMode = "ctrl-(h)iragana"
+	}
+
+	katakanaMode := termenv.String(katakana).Foreground(term.Color("10")).String()
+	if m.kanaType != katakana {
+		katakanaMode = "ctrl-(k)atakana"
+	}
+
+	bothMode := termenv.String(both).Foreground(term.Color("10")).String()
+	if m.kanaType != both {
+		bothMode = "ctrl-(b)oth"
+	}
+
+	modeMsg := fmt.Sprintf("%s %s %s %s", termenv.String("Kana mode: ").Foreground(term.Color("205")).String(), hiraganaMode, katakanaMode, bothMode)
+
 	return fmt.Sprintf(
-		"\n%s\n\n%s\n\n%s\n\n%s\n\n",
+		"\n%s\n\n%s\n\n%s\n\n%s\n%s\n\n",
 		termenv.String("Kana Word: ").Foreground(term.Color("205")).String()+m.currentWord,
 		m.textInput.View(),
 		statusMsg,
+		modeMsg,
 		"(esc or ctrl-c to quit)",
 	)
 }
