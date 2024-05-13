@@ -7,12 +7,14 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dunkbing/kana/constants"
 	"github.com/muesli/termenv"
 	"html/template"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 )
 
 //go:embed templates/*
@@ -20,34 +22,6 @@ var templates embed.FS
 
 //go:embed static/*
 var staticFiles embed.FS
-
-const usage = `Usage: kana [--help] [--kata] [--hira]
-
-Options:
-  --help  Show this help message and exit
-  --kata  Practice Katakana words
-  --hira  Practice Hiragana words
-
-If no option is provided, both Katakana and Hiragana words will be displayed.
-
-This app displays a random Katakana or Hiragana word, and you need to type the corresponding Romaji representation. Press Enter to submit your answer.
-
-Example:
-Word displayed: あい
-You type: ai (then press Enter)
-
-You can switch the kana mode with ctrl-h for Hiragana, ctrl-k for Katakana, or ctrl-b for both.`
-
-const (
-	hiraganaChars = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃゅょっ"
-	katakanaChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ"
-)
-
-const (
-	hiragana = "hiragana"
-	katakana = "katakana"
-	both     = "both"
-)
 
 var term = termenv.ColorProfile()
 
@@ -59,24 +33,24 @@ func main() {
 	for _, arg := range args {
 		switch arg {
 		case "--help":
-			fmt.Println(usage)
+			fmt.Println(constants.Usage)
 			return
 		case "--kata":
-			kanaType = katakana
+			kanaType = constants.Katakana
 		case "--hira":
-			kanaType = hiragana
+			kanaType = constants.Hiragana
 		case "serve":
 			runServer = true
 		default:
 			fmt.Println("Unknown option: " + arg)
 			fmt.Println()
-			fmt.Println(usage)
+			fmt.Println(constants.Usage)
 			return
 		}
 	}
 
 	if kanaType == "" {
-		kanaType = both
+		kanaType = constants.Both
 	}
 
 	if runServer {
@@ -91,13 +65,13 @@ func main() {
 
 func startServer() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		indexHandler(w, r, both)
+		indexHandler(w, r, constants.Both)
 	})
 	http.HandleFunc("/katakana", func(w http.ResponseWriter, r *http.Request) {
-		indexHandler(w, r, katakana)
+		indexHandler(w, r, constants.Katakana)
 	})
 	http.HandleFunc("/hiragana", func(w http.ResponseWriter, r *http.Request) {
-		indexHandler(w, r, hiragana)
+		indexHandler(w, r, constants.Hiragana)
 	})
 	http.Handle("/static/", http.FileServer(http.FS(staticFiles)))
 
@@ -108,9 +82,9 @@ func startServer() {
 func indexHandler(w http.ResponseWriter, r *http.Request, kanaType string) {
 	var tmplFile string
 	switch kanaType {
-	case katakana:
+	case constants.Katakana:
 		tmplFile = "templates/katakana.html"
-	case hiragana:
+	case constants.Hiragana:
 		tmplFile = "templates/hiragana.html"
 	default:
 		tmplFile = "templates/index.html"
@@ -133,7 +107,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, kanaType string) {
 
 type model struct {
 	textInput   textinput.Model
-	currentWord string
+	currentWord []string
 	status      string
 	points      int
 	kanaType    string
@@ -168,25 +142,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "ctrl+h":
-			if m.kanaType == hiragana {
+			if m.kanaType == constants.Hiragana {
 				return m, cmd
 			}
-			m.kanaType = hiragana
-			m.currentWord = newWord(hiragana)
+			m.kanaType = constants.Hiragana
+			m.currentWord = newWord(constants.Hiragana)
 
 		case "ctrl+k":
-			if m.kanaType == katakana {
+			if m.kanaType == constants.Katakana {
 				return m, cmd
 			}
-			m.kanaType = katakana
-			m.currentWord = newWord(katakana)
+			m.kanaType = constants.Katakana
+			m.currentWord = newWord(constants.Katakana)
 
 		case "ctrl+b":
-			if m.kanaType == both {
+			if m.kanaType == constants.Both {
 				return m, cmd
 			}
-			m.kanaType = both
-			m.currentWord = newWord(both)
+			m.kanaType = constants.Both
+			m.currentWord = newWord(constants.Both)
 
 		case "enter":
 			if m.textInput.Value() == toRomaji(m.currentWord) {
@@ -213,26 +187,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	statusMsg := fmt.Sprintf("%v (Points: %v)", m.status, m.points)
 
-	hiraganaMode := termenv.String(hiragana).Foreground(term.Color("10")).String()
-	if m.kanaType != hiragana {
+	hiraganaMode := termenv.String(constants.Hiragana).Foreground(term.Color("10")).String()
+	if m.kanaType != constants.Hiragana {
 		hiraganaMode = "ctrl-(h)iragana"
 	}
 
-	katakanaMode := termenv.String(katakana).Foreground(term.Color("10")).String()
-	if m.kanaType != katakana {
+	katakanaMode := termenv.String(constants.Katakana).Foreground(term.Color("10")).String()
+	if m.kanaType != constants.Katakana {
 		katakanaMode = "ctrl-(k)atakana"
 	}
 
-	bothMode := termenv.String(both).Foreground(term.Color("10")).String()
-	if m.kanaType != both {
+	bothMode := termenv.String(constants.Both).Foreground(term.Color("10")).String()
+	if m.kanaType != constants.Both {
 		bothMode = "ctrl-(b)oth"
 	}
 
 	modeMsg := fmt.Sprintf("%s %s %s %s", termenv.String("Kana mode: ").Foreground(term.Color("205")).String(), hiraganaMode, katakanaMode, bothMode)
 
+	currentWord := strings.Join(m.currentWord, "")
 	return fmt.Sprintf(
 		"\n%s\n\n%s\n\n%s\n\n%s\n%s\n\n",
-		termenv.String("Kana Word: ").Foreground(term.Color("205")).String()+m.currentWord,
+		termenv.String("Kana Word: ").Foreground(term.Color("205")).String()+currentWord,
 		m.textInput.View(),
 		statusMsg,
 		modeMsg,
@@ -240,65 +215,32 @@ func (m model) View() string {
 	)
 }
 
-func newWord(kanaType string) string {
-	var kanaChars []rune
+func newWord(kanaType string) []string {
+	var kanaChars []string
 
 	switch kanaType {
-	case katakana:
-		kanaChars = []rune(katakanaChars)
-	case hiragana:
-		kanaChars = []rune(hiraganaChars)
+	case constants.Katakana:
+		kanaChars = constants.KatakanaChars
+	case constants.Hiragana:
+		kanaChars = constants.HiraganaChars
 	default:
-		bothChars := hiraganaChars + katakanaChars
-		kanaChars = []rune(bothChars)
+		bothChars := constants.HiraganaChars[:0]
+		bothChars = append(bothChars, constants.HiraganaChars...)
+		bothChars = append(bothChars, constants.KatakanaChars...)
+		kanaChars = bothChars
 	}
 
-	word := make([]rune, rand.Intn(5)+1)
+	word := make([]string, rand.Intn(5)+1)
 	for i := range word {
 		word[i] = kanaChars[rand.Intn(len(kanaChars))]
 	}
-	return string(word)
+	return word
 }
 
-var kanaMap = map[rune]string{
-	'あ': "a", 'い': "i", 'う': "u", 'え': "e", 'お': "o",
-	'か': "ka", 'き': "ki", 'く': "ku", 'け': "ke", 'こ': "ko",
-	'さ': "sa", 'し': "shi", 'す': "su", 'せ': "se", 'そ': "so",
-	'た': "ta", 'ち': "chi", 'つ': "tsu", 'て': "te", 'と': "to",
-	'な': "na", 'に': "ni", 'ぬ': "nu", 'ね': "ne", 'の': "no",
-	'は': "ha", 'ひ': "hi", 'ふ': "fu", 'へ': "he", 'ほ': "ho",
-	'ま': "ma", 'み': "mi", 'む': "mu", 'め': "me", 'も': "mo",
-	'や': "ya", 'ゆ': "yu", 'よ': "yo",
-	'ら': "ra", 'り': "ri", 'る': "ru", 'れ': "re", 'ろ': "ro",
-	'わ': "wa", 'を': "o", 'ん': "n",
-	'が': "ga", 'ぎ': "gi", 'ぐ': "gu", 'げ': "ge", 'ご': "go",
-	'ざ': "za", 'じ': "ji", 'ず': "zu", 'ぜ': "ze", 'ぞ': "zo",
-	'だ': "da", 'ぢ': "ji", 'づ': "zu", 'で': "de", 'ど': "do",
-	'ば': "ba", 'び': "bi", 'ぶ': "bu", 'べ': "be", 'ぼ': "bo",
-	'ぱ': "pa", 'ぴ': "pi", 'ぷ': "pu", 'ぺ': "pe", 'ぽ': "po",
-	'ぁ': "a", 'ぃ': "i", 'ぅ': "u", 'ぇ': "e", 'ぉ': "o",
-	'ゃ': "ya", 'ゅ': "yu", 'ょ': "yo", 'っ': "tsu",
-	'ア': "a", 'イ': "i", 'ウ': "u", 'エ': "e", 'オ': "o",
-	'カ': "ka", 'キ': "ki", 'ク': "ku", 'ケ': "ke", 'コ': "ko",
-	'サ': "sa", 'シ': "shi", 'ス': "su", 'セ': "se", 'ソ': "so",
-	'タ': "ta", 'チ': "chi", 'ツ': "tsu", 'テ': "te", 'ト': "to",
-	'ナ': "na", 'ニ': "ni", 'ヌ': "nu", 'ネ': "ne", 'ノ': "no",
-	'ハ': "ha", 'ヒ': "hi", 'フ': "fu", 'ヘ': "he", 'ホ': "ho",
-	'マ': "ma", 'ミ': "mi", 'ム': "mu", 'メ': "me", 'モ': "mo",
-	'ヤ': "ya", 'ユ': "yu", 'ヨ': "yo",
-	'ラ': "ra", 'リ': "ri", 'ル': "ru", 'レ': "re", 'ロ': "ro",
-	'ワ': "wa", 'ヰ': "i", 'ヱ': "e", 'ヲ': "o", 'ン': "n",
-	'ガ': "ga", 'ギ': "gi", 'グ': "gu", 'ゲ': "ge", 'ゴ': "go",
-	'ザ': "za", 'ジ': "ji", 'ズ': "zu", 'ゼ': "ze", 'ゾ': "zo",
-	'ダ': "da", 'ヂ': "ji", 'ヅ': "zu", 'デ': "de", 'ド': "do",
-	'バ': "ba", 'ビ': "bi", 'ブ': "bu", 'ベ': "be", 'ボ': "bo",
-	'パ': "pa", 'ピ': "pi", 'プ': "pu", 'ペ': "pe", 'ポ': "po",
-}
-
-func toRomaji(s string) string {
+func toRomaji(s []string) string {
 	romaji := ""
 	for _, r := range s {
-		romaji += kanaMap[r]
+		romaji += constants.KanaMap[r]
 	}
 	return romaji
 }
