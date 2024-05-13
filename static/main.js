@@ -10,7 +10,14 @@ function generateWord() {
     const hiraganaChars = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃゅょっ';
     const katakanaChars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ';
 
-    const kanaChars = kanaType === 'hiragana' ? hiraganaChars : (kanaType === 'katakana' ? katakanaChars : hiraganaChars + katakanaChars);
+    let kanaChars = "";
+    if (window.location.pathname === '/katakana') {
+        kanaChars = katakanaChars;
+    } else if (window.location.pathname === '/hiragana') {
+        kanaChars = hiraganaChars;
+    } else {
+        kanaChars = hiraganaChars+katakanaChars;
+    }
     const wordLength = Math.floor(Math.random() * 5) + 1;
     let word = '';
 

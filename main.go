@@ -91,7 +91,13 @@ func main() {
 
 func startServer() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		indexHandler(w, r)
+		indexHandler(w, r, both)
+	})
+	http.HandleFunc("/katakana", func(w http.ResponseWriter, r *http.Request) {
+		indexHandler(w, r, katakana)
+	})
+	http.HandleFunc("/hiragana", func(w http.ResponseWriter, r *http.Request) {
+		indexHandler(w, r, hiragana)
 	})
 	http.Handle("/static/", http.FileServer(http.FS(staticFiles)))
 
@@ -99,15 +105,25 @@ func startServer() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFS(templates, "templates/index.html")
+func indexHandler(w http.ResponseWriter, r *http.Request, kanaType string) {
+	var tmplFile string
+	switch kanaType {
+	case katakana:
+		tmplFile = "templates/katakana.html"
+	case hiragana:
+		tmplFile = "templates/hiragana.html"
+	default:
+		tmplFile = "templates/index.html"
+	}
+	navTmpl := "templates/navbar.html"
+	tmpl, err := template.ParseFS(templates, tmplFile, navTmpl)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{
-		"KanaType": r.URL.Query().Get("kanaType"),
+		"KanaType": kanaType,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

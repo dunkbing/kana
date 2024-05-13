@@ -1,0 +1,16 @@
+{{ define "navbar" }}
+<nav class="bg-gray-800">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-row items-center justify-between">
+            <a href="/" class="text-white text-xl font-bold mr-8">Kana Practice</a>
+            <div class="flex flex-row">
+                <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
+                    Home
+                </a>
+                <a href="/katakana" class="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Katakana</a>
+                <a href="/hiragana" class="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Hiragana</a>
+            </div>
+        </div>
+    </div>
+</nav>
+{{ end }}
