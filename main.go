@@ -163,14 +163,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.currentWord = newWord(constants.Both)
 
 		case "enter":
-			if m.textInput.Value() == toRomaji(m.currentWord) {
+			correctAns := toRomaji(m.currentWord)
+			ans := strings.ToLower(m.textInput.Value())
+			if ans == correctAns {
 				m.status = "🎉 Correct!"
 				m.points++
-				m.textInput.Reset()
-				m.currentWord = newWord(m.kanaType)
 			} else {
-				m.status = "😭 Incorrect"
+				m.status = fmt.Sprintf("😭 Incorrect. The answer is %s", correctAns)
 			}
+			m.textInput.Reset()
+			m.currentWord = newWord(m.kanaType)
 
 		default:
 			m.textInput, cmd = m.textInput.Update(msg)
