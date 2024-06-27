@@ -12,6 +12,12 @@ Terminal app to practice typing Kana (Japanese characters) in Romaji. Built with
 go install github.com/dunkbing/kana@latest
 ```
 
+or run it directly
+
+```bash
+go run github.com/dunkbing/kana@latest
+```
+
 #### Homebrew
 
 ```bash
